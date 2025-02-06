@@ -1,12 +1,12 @@
 # Use Cases
-- [ ] 1. Be able to view and scroll thrugh a text file
-- [ ] 2. Have simular navigation as vim
-    - up/down/left/righ - k/j/h/l
+- [x] 1. Be able to view and scroll thrugh a text file
+- [x] 2. Have simular navigation as vim
+    - [x] up/down/left/righ - k/j/h/l
     - w to move up 1 word
     - b to move down 1 word
-- [ ] 3. Able to save a text file to disk
-- [ ] 4. Be responsive nad not feel "slow" on my computer
-- [ ] 5. implement modes 
+- [x] 3. Able to save a text file to disk
+- [?] 4. Be responsive nad not feel "slow" on my computer
+- [x] 5. implement modes 
     - "normal" : where you scroll thrugh text
     - "editing" : where keys you press are typed into the document
 - [ ] 6. implement undo - press a key and go back 1 "editing" sesion
