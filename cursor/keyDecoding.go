@@ -18,16 +18,26 @@ type decoder struct {
 	c Cursor
 }
 
-func (d *decoder) ParseInput(in byte) {
+func (d *decoder) ParseInput(in byte) int {
 	if d.m == typing {
 		d.decodeTyping(in)
-		return
+		return 0
 	}
 
 	if d.m == scrolling {
+		if in == 'q' {
+			return 10
+		}
+
+		if in == 'w' {
+			return 11
+		}
+
 		d.decodeScrolling(in)
-		return
+		return 0
 	}
+
+	return 0
 }
 
 func (d *decoder) decodeTyping(in byte) {

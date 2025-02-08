@@ -40,17 +40,17 @@ func main() {
 	for {
 		select {
 		case in, _ := <-ch:
-			switch in {
-			case 'q':
-				i.Restore()
+			i := d.ParseInput(in)
+			if i == 10 {
+				v.Restore()
 				v.Restore()
 				logger.CloseLogger()
 				os.Exit(0)
-			case 'w':
-				saveFile(f)
-			default:
-				d.ParseInput(in)
 			}
+			if i == 11 {
+				saveFile(f)
+			}
+
 		default:
 			v.PrintScreen(c, f)
 		}
