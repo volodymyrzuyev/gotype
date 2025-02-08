@@ -1,53 +1,41 @@
 package view
 
 import (
-	"fmt"
 	"os"
-	"os/exec"
-	"strconv"
 	"strings"
 
 	"github.com/volodymyrzuyev/gotype/cursor"
 	"github.com/volodymyrzuyev/gotype/file"
+	"golang.org/x/term"
 )
 
 const (
-	cursorLineColorForground  = "\033[38;5;232m"
-	cursorLineColorBackground = "\033[48;5;255m"
-	cursorColorBackground     = "\033[48;5;251m"
-	colorReset                = "\033[0m"
-	clearScreen               = "\033[2J\033[H"
-)
-
-var (
 	cursorLineBG = "\033[48;5;242m"
 	cursorBG     = "\033[48;5;246m"
+	colorReset   = "\033[0m"
+	clearScreen  = "\033[2J\033[H"
 )
 
 type View interface {
 	PrintScreen(c cursor.Cursor, f file.File)
+	Restore()
 }
 
 type view struct {
+	fd       int
+	oldState *term.State
+	term     *term.Terminal
 }
 
-func getTerminalDimensions() (int, int) {
-	cmd := exec.Command("stty", "size")
-	cmd.Stdin = os.Stdin
-	output, err := cmd.Output()
-	if err != nil {
-		panic(err)
-	}
-	size := strings.Fields(string(output))
-
-	rows, _ := strconv.Atoi(size[0])
-	cols, _ := strconv.Atoi(size[1])
-	fmt.Println(rows, cols)
-	return rows, cols
+func (v view) Restore() {
+	term.Restore(v.fd, v.oldState)
 }
 
 func (v view) PrintScreen(c cursor.Cursor, f file.File) {
-	rows, cols := getTerminalDimensions()
+	cols, rows, err := term.GetSize(v.fd)
+	if err != nil {
+		panic("Can't open terminal")
+	}
 
 	startingLine := max(0, c.GetRow()-10)
 	endingLine := min(c.GetRow()+rows-10, f.GetFileLength())
@@ -55,21 +43,38 @@ func (v view) PrintScreen(c cursor.Cursor, f file.File) {
 	out := ""
 
 	for i := startingLine; i < endingLine; i++ {
-		line := f.GetLine(i)
-		pLine := line + strings.Repeat(" ", cols-len(line))
+		line := padLine(f.GetLine(i), cols)
 		if i == c.GetRow() {
-			col := c.GetCol()
-			pLine = cursorLineBG + pLine[:col] + cursorBG + pLine[col:col+1] + cursorLineBG + pLine[col+1:] + colorReset
+			line = v.genCursorLine(line, c.GetCol())
 		}
-		out += pLine + "\n"
+		out += line
 	}
 
-	fmt.Print(clearScreen)
-	fmt.Print(out)
+	v.term.Write([]byte(clearScreen))
+	v.term.Write([]byte(out))
+}
+
+func (v view) genCursorLine(line string, col int) string {
+	return cursorLineBG + line[:col] + cursorBG + line[col:col+1] + cursorLineBG + line[col+1:] + colorReset
 }
 
 func NewView(f file.File, c cursor.Cursor) View {
 	v := view{}
 
+	v.fd = int(os.Stdout.Fd())
+	oldState, err := term.MakeRaw(v.fd)
+
+	if err != nil {
+		panic("Error Creating Terminal")
+	}
+
+	v.oldState = oldState
+	v.term = term.NewTerminal(os.Stdout, " ")
+
 	return v
+}
+
+func padLine(line string, cols int) string {
+	nl := strings.ReplaceAll(line, "	", "    ")
+	return nl + strings.Repeat(" ", cols-len(nl))
 }

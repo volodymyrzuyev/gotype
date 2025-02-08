@@ -11,6 +11,7 @@ type Cursor interface {
 	MoveL()
 	GetRow() int
 	GetCol() int
+	MoveToCol(col int)
 }
 
 type cursor struct {
@@ -30,6 +31,11 @@ func (c *cursor) MoveJ() {
 		return
 	}
 	c.row++
+	c.updateCol()
+}
+
+func (c *cursor) MoveToCol(i int) {
+	c.col = i
 	c.updateCol()
 }
 

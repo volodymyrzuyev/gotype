@@ -2,6 +2,8 @@ package file
 
 import (
 	"bufio"
+
+	"github.com/volodymyrzuyev/gotype/logger"
 )
 
 type File interface {
@@ -20,6 +22,7 @@ type file struct {
 }
 
 func (f *file) InsertLine(newLine string, afterLine int) {
+	logger.INFO.Printf("File Pre Enter new line:\n %v", f.getWholeFile())
 	newLines := make([]string, f.fileLines+1)
 	newLines[afterLine+1] = newLine
 
@@ -37,6 +40,7 @@ func (f *file) InsertLine(newLine string, afterLine int) {
 	f.lines = newLines
 
 	f.fileLines += 1
+	logger.INFO.Printf("File Post Enter new line:\n %v", f.getWholeFile())
 }
 
 func (f *file) ChangeLine(newLine string, line int) {
@@ -48,6 +52,10 @@ func (f *file) ChangeLine(newLine string, line int) {
 }
 
 func (f *file) DeleteLine(line int) {
+	if line <= 0 {
+		return
+	}
+
 	newLines := make([]string, f.fileLines)
 	for i, l := range f.lines {
 		j := i
@@ -77,6 +85,15 @@ func (f file) GetLine(line int) string {
 
 func (f file) IsLineEmpty(line int) bool {
 	return f.lines[line] == ""
+}
+
+func (f file) getWholeFile() string {
+	out := ""
+	for i := range f.lines {
+		out += f.lines[i] + "\n"
+	}
+
+	return out
 }
 
 func NewFile(fileScaner *bufio.Scanner) File {
